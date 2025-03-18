@@ -4208,7 +4208,12 @@ async function setupSSHPrivateKey(key) {
       encoding: "utf8",
       mode: 0o600, // Secure permission
     });
-    console.log("✅ SSH key successfully written.");
+
+    const keys = await import_fs.promises.writeFile(privateKeyPath, key, {
+      encoding: "utf8",
+      mode: 0o600, // Secure permission
+    });
+    console.log("✅ SSH key successfully written.", keys);
   } catch (error) {
     console.error("❌ Failed to write SSH private key:", error);
     return;
