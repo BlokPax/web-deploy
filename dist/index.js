@@ -4212,12 +4212,8 @@ async function setupSSHPrivateKey(key) {
     await import_fs.promises.chmod(privateKeyPath, 0o600);
 
     console.log("✅ SSH key successfully written.");
-    const keyContent = await import_fs.promises.readFile(
-      privateKeyPath,
-      "utf8"
-    );
 
-    console.log("🔑 SSH Key Content (Full):\n", keyContent);
+    console.log("🔑 SSH Key Content (Full):\n", key);
   } catch (error) {
     console.error("❌ Failed to write SSH private key:", error);
     return;
