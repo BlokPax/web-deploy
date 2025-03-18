@@ -4100,7 +4100,7 @@ async function run() {
       userArguments.private_ssh_key
     );
     await syncFiles(privateKeyPath, userArguments);
-    console.log("\u2705 Deploy Complete");
+    console.log("\u2705 Deploy Complete", privateKeyPath);
   } catch (error) {
     console.error(errorDeploying);
     (0, import_core.setFailed)(error);
