@@ -4209,14 +4209,15 @@ async function setupSSHPrivateKey(key) {
       mode: 0o600, // Secure permission
     });
 
-    console.log(
-      "🔑 Writing SSH Key (Masked):",
-      key.slice(0, 10) + "..." + key.slice(-10)
-    );
-
     await import_fs.promises.chmod(privateKeyPath, 0o600);
 
     console.log("✅ SSH key successfully written.");
+    const keyContent = await import_fs.promises.readFile(
+      privateKeyPath,
+      "utf8"
+    );
+
+    console.log("🔑 SSH Key Content (Full):\n", keyContent);
   } catch (error) {
     console.error("❌ Failed to write SSH private key:", error);
     return;
