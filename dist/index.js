@@ -4167,50 +4167,94 @@ async function verifyRsyncInstalled() {
   }
 }
 var { HOME, GITHUB_WORKSPACE } = process.env;
-import fs from "fs";
-import path from "path";
-
 async function setupSSHPrivateKey(key) {
   const HOME = process.env.HOME || __dirname;
   const GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE || __dirname;
-  const sshFolderPath = path.join(HOME, ".ssh");
-  const privateKeyPath = path.join(sshFolderPath, "web_deploy_key");
+  const sshFolderPath = (0, import_path.join)(HOME, ".ssh");
+  const privateKeyPath = (0, import_path.join)(sshFolderPath, "web_deploy_key");
 
-  console.log("HOME", HOME);
-  console.log("GITHUB_WORKSPACE", GITHUB_WORKSPACE);
+  console.log("🔍 HOME Directory:", HOME);
+  console.log("🔍 GITHUB_WORKSPACE:", GITHUB_WORKSPACE);
+  console.log("📁 Ensuring .ssh directory exists at:", sshFolderPath);
 
-  await fs.promises.mkdir(sshFolderPath, { recursive: true });
+  try {
+    await import_fs.promises.mkdir(sshFolderPath, { recursive: true });
+    console.log("✅ .ssh directory is ready.");
+  } catch (error) {
+    console.error("❌ Failed to create .ssh directory:", error);
+    return;
+  }
 
   const knownHostsPath = `${sshFolderPath}/known_hosts`;
-  if (!fs.existsSync(knownHostsPath)) {
-    console.log(`[SSH] Creating ${knownHostsPath} file in `, GITHUB_WORKSPACE);
-    await fs.promises.writeFile(knownHostsPath, "", {
+  if (!(0, import_fs.existsSync)(knownHostsPath)) {
+    console.log(`🛠 Creating known_hosts file at: ${knownHostsPath}`);
+    try {
+      await import_fs.promises.writeFile(knownHostsPath, "", {
+        encoding: "utf8",
+        mode: 0o600, // Secure permission
+      });
+      console.log("✅ known_hosts file created.");
+    } catch (error) {
+      console.error("❌ Failed to create known_hosts file:", error);
+      return;
+    }
+  } else {
+    console.log(`✅ known_hosts file already exists at: ${knownHostsPath}`);
+  }
+
+  console.log("📝 Writing SSH private key to:", privateKeyPath);
+  try {
+    await import_fs.promises.writeFile(privateKeyPath, key, {
       encoding: "utf8",
       mode: 0o600, // Secure permission
     });
-    console.log("✅ [SSH] file created.");
-  } else {
-    console.log(`[SSH] ${knownHostsPath} file exists`);
-  }
-
-  await fs.promises.writeFile(privateKeyPath, key, {
-    encoding: "utf8",
-    mode: 0o600, // Secure permission for SSH keys
-  });
-
-  console.log("✅ SSH key added to `.ssh` dir ", privateKeyPath);
-
-  // Read and output the written private key file
-  try {
-    const privateKeyContent = await fs.promises.readFile(
-      privateKeyPath,
-      "utf8"
-    );
-    console.log("🔑 SSH Private Key Content:\n", privateKeyContent);
+    console.log("✅ SSH key successfully written.");
   } catch (error) {
-    console.error("❌ Failed to read SSH private key file:", error);
+    console.error("❌ Failed to write SSH private key:", error);
+    return;
   }
 
+  // Set environment variable for later steps in GitHub Actions
+  const envFilePath = process.env.GITHUB_ENV;
+  if (envFilePath) {
+    try {
+      console.log(
+        "🛠 Adding SSH_PRIVATE_KEY_PATH to GITHUB_ENV:",
+        privateKeyPath
+      );
+      await import_fs.promises.appendFile(
+        envFilePath,
+        `SSH_PRIVATE_KEY_PATH=${privateKeyPath}\n`
+      );
+      console.log("✅ SSH_PRIVATE_KEY_PATH added to GITHUB_ENV.");
+    } catch (error) {
+      console.error(
+        "❌ Failed to set SSH_PRIVATE_KEY_PATH in GITHUB_ENV:",
+        error
+      );
+    }
+  } else {
+    console.warn("⚠️ GITHUB_ENV not found. Cannot set environment variable.");
+  }
+
+  // Set output for GitHub Actions
+  const outputFilePath = process.env.GITHUB_OUTPUT;
+  if (outputFilePath) {
+    try {
+      console.log("🛠 Writing SSH key path to GITHUB_OUTPUT:", privateKeyPath);
+      await import_fs.promises.appendFile(
+        outputFilePath,
+        `ssh_private_key_path=${privateKeyPath}\n`
+      );
+      console.log("✅ SSH key path written to GITHUB_OUTPUT.");
+    } catch (error) {
+      console.error("❌ Failed to write SSH key path to GITHUB_OUTPUT:", error);
+    }
+  } else {
+    console.warn("⚠️ GITHUB_OUTPUT not found. Cannot set output value.");
+  }
+
+  console.log("🚀 SSH setup complete.");
   return privateKeyPath;
 }
 
